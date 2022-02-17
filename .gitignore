@@ -2,3 +2,14 @@
 terraform.tfstate
 terraform.tfstate.backup
 foobah
+
+.terraform/providers
+.terraform.lock.hcl
+kubeconfig_dev-cluster
+.terraform/modules/my-cluster
+.terraform/modules/modules.json
+.terraform/modules
+
+# Terraform plan outputs
+*.tfplan
+*.plan

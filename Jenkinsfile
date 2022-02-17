@@ -1,26 +1,26 @@
 pipeline {
 
    parameters {
-    choice(name: 'action', choices: 'create\ndestroy', description: 'Create/update or destroy the eks cluster.')
-    string(name: 'cluster', defaultValue : 'demo', description: "EKS cluster name.")
-    choice(name: 'k8s_version', choices: '1.21\n1.20\n1.19\n1.18\n1.17\n1.16', description: 'K8s version to install.')
-    string(name: 'vpc_network', defaultValue : '10.0', description: "First 2 octets of vpc network; eg 10.0")
+    choice(name: 'action', choices: 'create\ndestroy', description: 'Create/update or destroy the EKS cluster.')
+    string(name: 'cluster', defaultValue : 'dev-demo', description: "EKS cluster name.")
+    choice(name: 'k8s_version', choices: '1.21\n1.20\n1.19', description: 'K8s version to install.')
+    string(name: 'vpc_network', defaultValue : '10.3', description: "First 2 octets of vpc network; eg 10.0")
     string(name: 'num_subnets', defaultValue : '3', description: "Number of vpc subnets/AZs.")
-    string(name: 'instance_type', defaultValue : 'm5.large', description: "k8s worker node instance type.")
-    string(name: 'num_workers', defaultValue : '3', description: "k8s number of worker instances.")
-    string(name: 'max_workers', defaultValue : '10', description: "k8s maximum number of worker instances that can be scaled.")
+    string(name: 'instance_type', defaultValue : 't3.medium', description: "K8s worker node instance type.")
+    string(name: 'num_workers', defaultValue : '2', description: "k8s minimum number of worker instances.")
+    string(name: 'max_workers', defaultValue : '10', description: "K8s maximum number of worker instances that can be scaled.")
     string(name: 'admin_users', defaultValue : '', description: "Comma delimited list of IAM users to add to the aws-auth config map.")
-    string(name: 'credential', defaultValue : 'jenkins', description: "Jenkins credential that provides the AWS access key and secret.")
-    string(name: 'key_pair', defaultValue : 'spicysomtam-aws7', description: "EC2 instance ssh keypair.")
-    booleanParam(name: 'cw_logs', defaultValue : true, description: "Setup Cloudwatch logging?")
+    string(name: 'credential', defaultValue : 'jenkins', description: "Jenkins credential that provides the AWS Access and Secret keys.")
+    string(name: 'key_pair', defaultValue : 'spicysom-aws4-kp', description: "EC2 instance ssh keypair.")
+    booleanParam(name: 'cw_logs', defaultValue : false, description: "Setup Cloudwatch logging?")
     booleanParam(name: 'cw_metrics', defaultValue : false, description: "Setup Cloudwatch metrics and Container Insights?")
-    booleanParam(name: 'metrics_server', defaultValue : true, description: "Setup k8s metrics-server?")
-    booleanParam(name: 'dashboard', defaultValue : false, description: "Setup k8s dashboard?")
-    booleanParam(name: 'prometheus', defaultValue : true, description: "Setup k8s prometheus?")
+    booleanParam(name: 'metrics_server', defaultValue : true, description: "Setup K8s metrics-server?")
+    booleanParam(name: 'dashboard', defaultValue : true, description: "Setup K8s dashboard?")
+    booleanParam(name: 'prometheus', defaultValue : false, description: "Setup K8s prometheus?")
     booleanParam(name: 'nginx_ingress', defaultValue : true, description: "Setup nginx ingress and load balancer?")
-    booleanParam(name: 'ca', defaultValue : false, description: "Setup k8s Cluster Autoscaler?")
+    booleanParam(name: 'ca', defaultValue : false, description: "Setup K8s Cluster Autoscaler?")
     booleanParam(name: 'cert_manager', defaultValue : false, description: "Setup cert-manager for certificate handling?")
-    string(name: 'region', defaultValue : 'eu-west-1', description: "AWS region.")
+    string(name: 'region', defaultValue : 'eu-west-2', description: "AWS region.")
   }
 
   options {
@@ -116,7 +116,7 @@ pipeline {
           credentialsId: params.credential, 
           accessKeyVariable: 'AWS_ACCESS_KEY_ID',  
           secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-            sh "terraform apply -input=false -auto-approve ${plan}"
+            sh "terraform apply -input=false -parallelism=32 -auto-approve ${plan}"
           }
         }
       }
@@ -214,15 +214,6 @@ pipeline {
                 case '1.19':
                   tag='1'
                   break;
-                case '1.18':
-                  tag='3'
-                  break;
-                case '1.17':
-                  tag='4'
-                  break;
-                case '1.16':
-                  tag='7'
-                  break;
               }
 
               // Setup documented here: https://docs.aws.amazon.com/eks/latest/userguide/cluster-autoscaler.html
@@ -279,7 +270,7 @@ pipeline {
       }
       steps {
         script {
-          input "Destroy Terraform stack ${params.cluster} in aws?" 
+          input "Destroy Terraform stack ${params.cluster} in AWS?" 
 
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
             credentialsId: params.credential, 

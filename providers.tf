@@ -2,10 +2,11 @@
 # Provider Configuration
 #
 terraform {
+  required_version = "~>1.0.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.57.0"
+      version = "~> 3.0"
     }
 
     # Not required: currently used in conjuction with using
@@ -19,10 +20,11 @@ terraform {
   }
 }
 
-# Using these data sources allows the configuration to be
-# generic for any region.
-data "aws_region" "current" {
-}
+provider "aws" {
+  region  = var.aws_region
+  # profile = var.aws_profile   # uncomment if you want to run locally
 
-data "aws_availability_zones" "available" {
+  default_tags {
+    tags = local.all_tags
+  }
 }

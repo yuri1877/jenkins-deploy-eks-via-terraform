@@ -54,19 +54,22 @@ resource "aws_security_group" "cluster" {
 }
 
 resource "aws_eks_cluster" "eks" {
-  name      = "${var.cluster-name}"
-  role_arn  = aws_iam_role.cluster.arn
-  version   = var.k8s_version
+  name                      = var.cluster-name
+  role_arn                  = aws_iam_role.cluster.arn
+  version                   = var.k8s_version
   enabled_cluster_log_types = var.cw_logs ? ["api", "audit", "authenticator", "controllerManager", "scheduler"] : []
 
   vpc_config {
     security_group_ids = [aws_security_group.cluster.id]
     subnet_ids         = aws_subnet.eks.*.id
+
+    # endpoint_private_access      = true
+    # endpoint_public_access       = true
+    # public_access_cidrs = var.control_plane_public_access_cidrs
   }
 
   depends_on = [
     aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy,
-#    aws_iam_role_policy_attachment.cluster-AmazonEKSServicePolicy,
+    #    aws_iam_role_policy_attachment.cluster-AmazonEKSServicePolicy,
   ]
 }
-
