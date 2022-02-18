@@ -26,11 +26,12 @@ pipeline {
   options {
     disableConcurrentBuilds()
     timeout(time: 1, unit: 'HOURS')
-    withAWS(credentials: params.credential, region: params.region)
+    // withAWS(credentials: params.credential, region: params.region)
     ansiColor('xterm')
   }
 
-  agent { label 'master' }
+  // Make sure the number `# of executors` is set to 1 or above in Jenkisn->Configure System
+  agent any 
 
   environment {
     // Set path to workspace bin dir
@@ -40,7 +41,7 @@ pipeline {
   }
 
   tools {
-    terraform '1.0'
+    terraform '1.0.8'
   }
 
   stages {
@@ -65,8 +66,16 @@ pipeline {
             ls -l kubectl helm )
           """
           // This will halt the build if jq not found
-          println "Checking jq is installed:"
-          sh "which jq"
+          println "Checking jq is installed"
+          sh """
+            [ ! -d bin ] && mkdir bin
+            ( cd bin
+            # 'latest' jq 
+            curl --silent -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod u+x ./jq
+            ls -l jq 
+            which jq )
+          """
         }
       }
     }
